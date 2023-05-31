@@ -10,5 +10,5 @@ Games:
 <!-- Our sketch will go here! -->
 </div>
 
-<script src="http://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+<script src="/libs/p5.js"></script>
 <script src="dna_animation.js"></script>
