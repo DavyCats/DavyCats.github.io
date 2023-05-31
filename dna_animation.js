@@ -10,7 +10,7 @@ var base_d;
 var off;
 
 function setup() {
-  createCanvas(200, 400);
+  var canvas = createCanvas(200, 400);
   canvas.parent('sketch-holder');
   frameRate(24);
   noStroke();
