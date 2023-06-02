@@ -57,9 +57,15 @@ function checkWallCollision(ball) {
   if (ball.x - ballRadius <= 0 || ball.x + ballRadius >= w) {
     // make sure the ball isn't stuck bouncing from wall to wall
     if (ball.sideWallHit && (ball.right > 0.90 || ball.right < -0.90)) {
-      ball.right = ball.right*0.99;
-      ball.down = ball.down < 0? -(1-abs(ball.right)): 1-abs(ball.right);
+      ball.right = ball.right * 0.99;
+      ball.down = ball.down < 0 ? -(1-abs(ball.right)): 1-abs(ball.right);
     }
+    // Prevent the ball from getting stuck in the wall. Since the above code
+    // reduces horizontal speed, the ball may end up not moving all the way
+    // out of the wall (normally it would since it will move out as much as it
+    // moved in).
+    ball.x = ball.x - ballRadius <= 0 ? ball.x + ballRadius : ball.x - ballRadius;
+    
     ball.right = -ball.right;
     ball.sideWallHit = true;
   }
