@@ -55,17 +55,17 @@ function getTrajectory(x1, y1, x2, y2) {
 
 function checkWallCollision(ball) {
   if (ball.x - ballRadius <= 0 || ball.x + ballRadius >= w) {
-	// make sure the ball isn't stuck bouncing from wall to wall
+    // make sure the ball isn't stuck bouncing from wall to wall
     if (ball.sideWallHit && (ball.right > 0.90 || ball.right < -0.90)) {
-		ball.right = ball.right*0.99;
-		ball.down = ball.down < 0? -(1-abs(ball.right)): 1-abs(ball.right);
-	}
+      ball.right = ball.right*0.99;
+      ball.down = ball.down < 0? -(1-abs(ball.right)): 1-abs(ball.right);
+    }
     ball.right = -ball.right;
-	ball.sideWallHit = true;
+    ball.sideWallHit = true;
   }
   if (ball.y - ballRadius <= 0) {
     ball.down = -ball.down;
-	ball.sideWallHit = false;
+    ball.sideWallHit = false;
   }
   if (ball.y + ballRadius >= bottomLine) {
     return true; // should despawn
@@ -84,25 +84,25 @@ function checkCircleCollision(ball) {
         var yOffset = circleY - ball.y;
         var distance = sqrt(pow(xOffset, 2) + pow(yOffset, 2));
         if (circles[rowI][columnI] === -1 && distance < ballRadius * 2) { // increase balls
-            newBalls = newBalls + 1;
-            circles[rowI][columnI] = 0;
+          newBalls = newBalls + 1;
+          circles[rowI][columnI] = 0;
         } else if (circles[rowI][columnI] > 0 && distance < ballRadius + circleRadius) { // bounce
-            // get collision vector
-            var trajectory = getTrajectory(circleX, circleY, ball.x, ball.y);
-            // apply vector to ball trajectory vector
-            var xAdjusted = ball.right + trajectory.x*2;
-            var yAdjusted = ball.down + trajectory.y*2;
-            // normalize to have their absolutes sum to 1
-            var total = abs(xAdjusted) + abs(yAdjusted);
-            var xPortion = abs(xAdjusted)/total;
-            var yPortion = abs(yAdjusted)/total;
-            // set new trajectory
-            ball.right = xAdjusted < 0 ? -xPortion: xPortion;
-            ball.down = yAdjusted < 0 ? -yPortion: yPortion;
-			ball.sideWallHit = false;
+          // get collision vector
+          var trajectory = getTrajectory(circleX, circleY, ball.x, ball.y);
+          // apply vector to ball trajectory vector
+          var xAdjusted = ball.right + trajectory.x*2;
+          var yAdjusted = ball.down + trajectory.y*2;
+          // normalize to have their absolutes sum to 1
+          var total = abs(xAdjusted) + abs(yAdjusted);
+          var xPortion = abs(xAdjusted)/total;
+          var yPortion = abs(yAdjusted)/total;
+          // set new trajectory
+          ball.right = xAdjusted < 0 ? -xPortion: xPortion;
+          ball.down = yAdjusted < 0 ? -yPortion: yPortion;
+          ball.sideWallHit = false;
 
-            //reduce value of hit circle
-            circles[rowI][columnI] = circles[rowI][columnI] - 1;
+          //reduce value of hit circle
+          circles[rowI][columnI] = circles[rowI][columnI] - 1;
         }
       }
     }
@@ -128,9 +128,7 @@ function createRow() {
 function mouseClicked(e) {
   if (e.offsetY < bottomLine && !inProgress) {
     shootTrajectory = getTrajectory(spawnLocation,
-	                                bottomLine - ballRadius - 1,
-                                    e.offsetX,
-                                    e.offsetY);
+      bottomLine - ballRadius - 1, e.offsetX, e.offsetY);
     inProgress = true;
   }
 }
@@ -184,7 +182,7 @@ function draw() {
         fill(value % 100, 100, 100);
         circle(columnI*columnWidth + leftOffset,
                rowI*columnWidth + columnWidth*1.5,
-			   circleRadius * 2);
+               circleRadius * 2);
         // show value in circle
         fill(0);
         textSize(circleRadius * 0.75);
@@ -193,7 +191,7 @@ function draw() {
              rowI*columnWidth + columnWidth*1.5);
       }
       if (value === -1) {
-		// draw ball pickups
+        // draw ball pickups
         fill(0, 0, 100)
         circle(columnI*columnWidth + leftOffset,
                rowI*columnWidth + columnWidth*1.5,
@@ -226,8 +224,8 @@ function draw() {
     // move ball 
     balls[ballI].y = balls[ballI].y + balls[ballI].down*pixelsPerFrame;
     balls[ballI].x = balls[ballI].x + balls[ballI].right*pixelsPerFrame;
-	
-	// draw ball
+  
+    // draw ball
     fill(0, 0, 100);
     circle(balls[ballI].x, balls[ballI].y, ballRadius * 2);
 
@@ -255,7 +253,7 @@ function draw() {
                   y: bottomLine - ballRadius - 1, 
                   down: shootTrajectory.y, 
                   right: shootTrajectory.x,
-				  sideWallHit: false});
+                  sideWallHit: false});
       ballsSpawned = ballsSpawned + 1;
       framesSinceSpawn = 0;
     } else {
@@ -264,7 +262,7 @@ function draw() {
   }
 
   // handle level ending
-  if (inProgress && !lost && balls.length === 0 && ballsSpawned === numberOfBalls){
+  if (inProgress && !lost && balls.length === 0 && ballsSpawned === numberOfBalls) {
     var newRow = createRow();
     circles.unshift(newRow);
     if (circles[rows].map(arr => arr > 0).includes(true)) {
@@ -274,14 +272,14 @@ function draw() {
       newBalls = 0;
       ballsSpawned = 0;
       framesSinceSpawn = Infinity;
-	  
-	  spawnLocation = newSpawnLocation;
-	  newSpawnLocation = null;
+    
+      spawnLocation = newSpawnLocation;
+      newSpawnLocation = null;
       spawnLocationSet = false;
       
-	  inProgress = false;
+      inProgress = false;
       score = score + 1;
-	  circles.pop();
+      circles.pop();
     }
   }
 }
