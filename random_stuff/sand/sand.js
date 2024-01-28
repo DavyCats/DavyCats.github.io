@@ -20,7 +20,16 @@ function setup() {
   col = color(255,0,0);
   colorMode(HSB);
   createCanvas(W, H);
+  pixelDensity(1);
 }
+
+
+function pixel_is_black(pixels, pixel){
+  return pixels[pixel] == 0 &&
+  pixels[pixel+1] == 0 &&
+  pixels[pixel+2] == 0;
+}
+
 
 function draw() {
   if (mouseIsPressed) {
@@ -32,30 +41,41 @@ function draw() {
     time_since_fade = 0;
   }
   loadPixels();
-  for (var x = W-1; x >= 0; x--) {
-    for (var y = H-1; y >= 0; y--) {
+  for (var y = H-1; y >= 0; y--) {
+    for (var x = W-1; x >= 0; x--) {
       var this_pixel = (y*W + x) * 4;
       var pixel_above = ((y-1)*W + x) * 4;
+      var pixel_left = ((y)*W + x-1) * 4;
+      var pixel_above_left = ((y-1)*W + x-1) * 4;
+      var pixel_above_right = ((y-1)*W + x+1) * 4;
       
       var new_red = pixels[this_pixel] - fade;
       var new_green = pixels[this_pixel+1] - fade;
       var new_blue = pixels[this_pixel+2] - fade;
       
-      var this_pixel_is_black = pixels[this_pixel] == 0 &&
-        pixels[this_pixel+1] == 0 &&
-        pixels[this_pixel+2] == 0;      
-      
-      var pixel_above_is_black = pixels[pixel_above] == 0 &&
-        pixels[pixel_above+1] == 0 &&
-        pixels[pixel_above+2] == 0;
-      
-      if (this_pixel_is_black && ! pixel_above_is_black) {
-        new_red = pixels[pixel_above];
-        new_green = pixels[pixel_above+1];
-        new_blue = pixels[pixel_above+2];
-        pixels[pixel_above] = 0;
-        pixels[pixel_above+1] = 0;
-        pixels[pixel_above+2] = 0;
+      if (pixel_is_black(pixels, this_pixel)) {
+        if (! pixel_is_black(pixels, pixel_above)) {
+          new_red = pixels[pixel_above];
+          new_green = pixels[pixel_above+1];
+          new_blue = pixels[pixel_above+2];
+          pixels[pixel_above] = 0;
+          pixels[pixel_above+1] = 0;
+          pixels[pixel_above+2] = 0;
+         } else if (x > 0 && ! pixel_is_black(pixels, pixel_above_left) && ! pixel_is_black(pixels, pixel_left)) {
+          new_red = pixels[pixel_above_left];
+          new_green = pixels[pixel_above_left+1];
+          new_blue = pixels[pixel_above_left+2];
+          pixels[pixel_above_left] = 0;
+          pixels[pixel_above_left+1] = 0;
+          pixels[pixel_above_left+2] = 0;
+        } else if (x < W-1 && ! pixel_is_black(pixels, pixel_above_right)) {
+          new_red = pixels[pixel_above_right];
+          new_green = pixels[pixel_above_right+1];
+          new_blue = pixels[pixel_above_right+2];
+          pixels[pixel_above_right] = 0;
+          pixels[pixel_above_right+1] = 0;
+          pixels[pixel_above_right+2] = 0; 
+        }
       }
       
       pixels[this_pixel] = new_red;
