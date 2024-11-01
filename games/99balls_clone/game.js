@@ -155,7 +155,9 @@ function setup() {
   textStyle(BOLD);
   
   frameRate(fps);
-  createCanvas(w, h);
+  var canvas = createCanvas(w, h);
+  canvas.parent('sketch-holder');
+
   
   // setup initial grid of circles
   for (var rowI=0; rowI < rows; rowI++) {
