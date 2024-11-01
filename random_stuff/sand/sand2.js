@@ -20,7 +20,8 @@ function mouseWheel(event) {
 function setup() {
   col = color(255,0,0);
   colorMode(HSB);
-  createCanvas(W, H);
+  var canvas = createCanvas(W, H);
+  canvas.parent('sketch-holder');
   pixelDensity(1);
 }
 

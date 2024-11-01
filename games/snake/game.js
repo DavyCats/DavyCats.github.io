@@ -70,7 +70,9 @@ function appleCollision() {
 }
 
 function setup() {
-  createCanvas(w, h);
+  var canvas = createCanvas(w, h);
+  canvas.parent('sketch-holder');
+  
   frameRate(30);
   noStroke();
   textAlign(CENTER, CENTER);
