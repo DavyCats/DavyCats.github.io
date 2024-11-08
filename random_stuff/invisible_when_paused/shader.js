@@ -1,8 +1,3 @@
-/* TODO
- * videos
- * make a selection of images/videos available
- */
-
 // Vertex shader source code
 const vertexShaderSource = `
     attribute vec4 aVertexPosition;
