@@ -1,0 +1,17 @@
+---
+layout: page
+---
+
+Guess the answer given the clue. If guessed correctly, a new clue will appear. The answer for 
+this new clue will differ from the previous by exactly one character. Since clues and answers
+are picked at random, answers and clues may repeat (though not consecutively).
+
+<table id="words">
+  <tr>
+        <th>Clue</th>
+        <th>Answer</th>
+  </tr>
+</table>
+<input id="guess", oninput="guess();"></input> Current score: <span id="score">0</span>
+
+<script src="game.js"></script>

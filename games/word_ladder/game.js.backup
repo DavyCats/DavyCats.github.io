@@ -1,0 +1,219 @@
+var score = 0;
+var wordLength = 2;
+var wordList = [];
+
+class cell {
+    constructor(score, d, x, y) {
+        this.score = score;
+        this.d = d;
+        this.x = x;
+        this.y = y;
+    }
+}
+
+function alignAndScore(a, b) {
+    // Use Needleman–Wunsch to find distance between two strings.
+    // gap: -2, mismatch: -1, match: 1
+    var grid = [];
+    for (var x = 0; x <= a.length; x++) {
+        var column = [new cell(0-x*2, false, x === 0? false: true, false)];
+        for (var y = 1; y <= b.length; y++) {
+            if (x === 0) {
+                column.push(new cell(column[y-1].score-2, false, false, true));
+            } else {
+                var dscore = grid[x-1][y-1].score + (a[x-1] === b[y-1]? 1: -1);
+                var xscore = grid[x-1][y].score - 2;
+                var yscore = column[y-1].score - 2;
+                highest = Math.max(dscore, xscore, yscore);
+                column.push(new cell(
+                    highest,
+                    dscore === highest,
+                    xscore === highest,
+                    yscore === highest
+                ));
+            }
+        }
+        grid.push(column);
+    }
+    var x2 = a.length; 
+    var y2 = b.length;
+    distanceScore = 0;
+    while (x2 !== 0 || y2 != 0) {
+        var c = grid[x2][y2];
+        if (c.x) {
+            x2--;
+            distanceScore++; 
+        } else if (c.y) {
+            y2--;
+            distanceScore++;
+        } else {
+            x2--;
+            y2--;
+            if (a[x2] !== b[y2]) distanceScore++;
+        }
+    }
+    return distanceScore;
+}
+
+function distance(a, b){
+    if (b === undefined) { // deal with first word
+        return 1;
+    }
+    return alignAndScore(a, b);
+}
+
+function chooseWord(){
+    var unused = Object.keys(words[wordLength]).filter(word => !wordList.includes(word));
+    do {
+        if (unused.length === 0) {
+            wordLength++;
+            //FIXME what if word length gets too long
+            unused = Object.keys(words[wordLength]);
+        }
+        var chosen = unused[Math.floor(Math.random() * unused.length)];
+        unused = unused.filter(word => word != chosen);
+    } while (distance(chosen, wordList[wordList.length-1]) > 1);
+
+    return chosen;
+}
+
+function addWord(){
+    var chosen = chooseWord();
+    wordList.push(chosen);
+
+    var table = document.getElementById("words");
+    var row = document.createElement("tr");
+    var description = document.createElement("td");
+    var word = document.createElement("td");
+    word.id = "last";
+    description.innerText = words[wordLength][chosen][Math.floor(Math.random() * words[wordLength][chosen].length)];
+    word.innerText = "_".repeat(wordLength);
+    row.appendChild(description);
+    row.appendChild(word);
+    table.appendChild(row);
+}
+
+function guess(){
+    var value = document.getElementById("guess").value;
+    if (wordList[wordList.length-1] === value) {
+        document.getElementById("last").innerText = wordList[wordList.length-1];
+        document.getElementById("guess").value = null;
+        document.getElementById("last").id = null;
+        score++;
+        addWord();
+    }
+}
+
+const words = {
+    2: {
+        "an": ["one"],
+        "me": ["it's just ___, myself and I", "1st person singular"],
+        "by": ["next to"],
+        "be": ["to exist", "to ___ or not to ___"],
+        "on": ["not off"],
+        "no": ["negative", "yes but ___", "false"],
+        "in": ["___side", "I'm ___!"],
+        "ho": ["a third of santa's catchphrase"],
+        "am": ["I think, therefore, I ___"],
+        "my": ["___ precious..."],
+    },
+    3: {
+        "bee": ["maker of honey"],
+        "and": ["also", "in addition"],
+        "end": ["from start to ___", "the omega"],
+        "ant": ["common insect", "tiny creature"],
+        "ran": ["jogged", "did some cardio"],
+        "met": ["well ____!"],
+        "now": ["not later"],
+        "tin": ["___ can"],
+        "ram": ["punch", "a male sheep"],
+        "ton": ["a lot"],
+        "bye": ["see you later"],
+        "fin": ["fish organ"],
+        "amy": ["girl's name"],
+        "bet": ["put money on the line"],
+        "not": ["!", "negation"],
+        "who": ["___ would do such a thing?"],
+        "any": ["___ and all"],
+        "let": ["___'s go!"],
+        "rat": ["animal in chinese zodiac"],
+        "tip": ["___ your waiter", "advice"],
+        "leg": ["lower extremity"],
+        "top": ["the best"],
+        "sin": ["one of seven"]
+    },
+    4: {
+        "trip": ["fall"],
+        "land": ["touch down"],
+        "send": ["bring to the post office"],
+        "rant": ["complain"],
+        "meta": ["___data"],
+        "snow": ["frozen precipitation"],
+        "slow": ["like a snail"],
+        "tint": ["hue"],
+        "mint": ["make a coin"],
+        "mine": ["better don't step on it", "where gold is found"],
+        "line": ["one dimension"],
+        "ming": ["chinese dynastiny from 1368 to 1644"],
+        "sing": ["___ me a song"],
+        "cram": ["stuff into"],
+        "tone": ["a pitch", "muscle definition"],
+        "byes": ["multiple farewells"],
+        "bees": ["NOT THE ____!"],
+        "eyes": ["most people have two of them"],
+        "fine": ["ticket"],
+        "mime": ["mute clown"],
+        "file": ["document"],
+        "amyl": ["pentyl group"],
+        "eyed": ["looked at"],
+        "bets": ["puts money on the line"],
+        "note": ["something passed in class"],
+        "whom": ["to ___ it may concern"],
+        "many": ["a lot of them"],
+        "legs": ["walking organs"],
+        "lets": ["___ go!"],
+        "lots": ["many"],
+        "rats": ["generally considered dirty animals"],
+        "tips": ["gives money for a service done"],
+        "stop": ["halt"],
+        "ties": ["binds"],
+        "lies": ["falsehoods"],
+        "dies": ["stops living"],
+        "does": ["acts", "performs an act"],
+        "toes": ["most have got ten of them", "these come in two sets of five", "these like to wiggle"],
+        "toss": ["throw", "get rid off", "___ a coin to your witcher..."],
+        "loss": ["L", "something no one wants"],
+        "lose": ["L", "unintentionally get rid off"],
+        "dose": ["part of a prescription"],
+        "rose": ["something to give a lover", "thorny yet beautiful"],
+        "rise": ["stand up", "all ___!", "something dough might do"],
+        "king": ["it's good to be the ___", "he who wears the crown"],
+        "bing": ["a search engine"],
+        "rice": ["something often paired with chicken and broccili"],
+        "dice": ["common part of games", "DnD uses loads of these"],
+        "lice": ["little pests"],
+        "wise": ["what old people are supposed to be"],
+        "lags": ["stutters"]
+    },
+    5: {
+        "strip": ["remove"],
+        "gland": ["organ that secretes stuff"],
+        "sends": ["brings to the post office"],
+        "grant": ["money"],
+        "metal": ["heavy ___"],
+        "snows": ["falling ice"],
+        "slows": ["reduces speed"],
+        "tints": ["colors"],
+        "mined": ["searched for gold"],
+        "mints": ["candies"],
+        "lined": ["###"],
+        "mings": ["members of a chinese dynasty?"],
+        "singe": ["###"],
+        "crame": ["store at a fair"],
+        "stone": ["rock"],
+        "bytes": ["eight bits", "small sections of data"],
+        "beets": ["a vegetable"],
+    }
+}
+
+addWord();
