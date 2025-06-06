@@ -90,28 +90,33 @@ if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
 }
 
 // load image
-gl.activeTexture(gl.TEXTURE0);
 const ImageTexture = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, ImageTexture);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-    new Uint8Array([0,0,0,255])); // initial single pixel image
+const noiseTexture = gl.createTexture();
+
 var image = new Image();
 image.src = "./text.png";
 image.addEventListener('load', function() {
+    canvas.width = image.width;
+    canvas.height = image.height;
+
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, ImageTexture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
-    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+    // make noise
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, noiseTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+        new Uint8Array(saltPepperNoise(canvas.width, canvas.height)));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+    requestAnimationFrame(render);
 });
-
-// make noise
-gl.activeTexture(gl.TEXTURE1);
-const noiseTexture = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, noiseTexture);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-    new Uint8Array(saltPepperNoise(canvas.width, canvas.height)));
-gl.generateMipmap(gl.TEXTURE_2D);
-
 
 // fps control stuff
 var lastFrameDrawnAt = window.performance.now();
@@ -152,21 +157,15 @@ function render(time) {
         gl.uniform1i(noiseTextureLocation, 1);
 
         // Clear the canvas and draw the square
-        //gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         // Save as previous frame
         gl.activeTexture(gl.TEXTURE1);
         gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, canvas.width, canvas.height, 0);
-        gl.generateMipmap(gl.TEXTURE_2D);
     }
 
     if (!PAUSE) {
         requestAnimationFrame(render);
     }
 }
-
-requestAnimationFrame(render);
-
-
