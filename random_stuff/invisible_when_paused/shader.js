@@ -1,3 +1,6 @@
+/* THIS IS A MESS and needs a bunch of cleanup/refactoring....
+ */
+
 // Vertex shader source code
 const vertexShaderSource = `
     attribute vec4 aVertexPosition;
@@ -16,7 +19,9 @@ const fragmentShaderSource = `
     void main(void) {
         vec4 ones = vec4(1., 1., 1., 1.);
         vec2 uv = gl_FragCoord.xy / uResolution.xy;
-        if (texture2D(uImageTexture, uv) != ones) {
+        vec4 this_pixel = texture2D(uImageTexture, uv);
+        float value = this_pixel.x + this_pixel.y + this_pixel.z;
+        if (value < 1.5) {
             gl_FragColor = vec4(abs(texture2D(uNoiseTexture, uv).xyz - ones.xyz), 1.);
         } else {
             gl_FragColor = texture2D(uNoiseTexture, uv);
@@ -25,12 +30,73 @@ const fragmentShaderSource = `
 `;
 
 var PAUSE = false;
+var PLAYING_VIDEO = false;
+var video_playing = false
+var video_timeupdate = false;
 
 function pause() {
     PAUSE = ! PAUSE;
     if (!PAUSE) {
         requestAnimationFrame(render);
     }
+}
+
+function stop() {
+    PAUSE = true
+}
+
+function start() {
+    PAUSE = false
+    requestAnimationFrame(render);
+}
+
+function load_image(url) {
+    // load image
+    stop();
+    image.src = url;
+    PLAYING_VIDEO = false
+}
+
+// video
+function load_video(url) {
+    stop();
+    video_timeupdate = false;
+    video_playing = false;
+    video.src = url;
+    video.volume = 0;
+    video.loop = true;
+    video.play();
+}
+
+function video_ready() {
+    if (video_playing && video_timeupdate) {
+        // This is pretty much the as with an image, except that width/height use different variables
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, ImageTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+        // make noise
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, noiseTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+            new Uint8Array(saltPepperNoise(canvas.width, canvas.height)));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+        PLAYING_VIDEO = true;
+        start();
+    }
+}
+
+function switch_image() {
+    load_video("Firefox.mp4")
 }
 
 function compileShader(source, type) {
@@ -89,12 +155,9 @@ if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
     console.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
 }
 
-// load image
 const ImageTexture = gl.createTexture();
 const noiseTexture = gl.createTexture();
-
 var image = new Image();
-image.src = "./text.png";
 image.addEventListener('load', function() {
     canvas.width = image.width;
     canvas.height = image.height;
@@ -114,9 +177,24 @@ image.addEventListener('load', function() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-    requestAnimationFrame(render);
+    start();
 });
+
+// Setup a video element, checking both playing and timeupdate to ensure that data is available before rendering
+var video = document.createElement('video');
+video.addEventListener('playing', function() {
+    video_playing = true;
+    video_ready();
+})
+video.addEventListener('timeupdate', function() {
+    if (! video_timeupdate) {
+        video_timeupdate = true;
+        video_ready();
+    }
+})
+
+// load default image
+load_image("./text.png")
 
 // fps control stuff
 var lastFrameDrawnAt = window.performance.now();
@@ -159,6 +237,12 @@ function render(time) {
         // Clear the canvas and draw the square
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+        if (PLAYING_VIDEO) {
+            gl.activeTexture(gl.TEXTURE0);
+            //gl.bindTexture(gl.TEXTURE_2D, ImageTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+        }
 
         // Save as previous frame
         gl.activeTexture(gl.TEXTURE1);
